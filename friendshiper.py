@@ -4,7 +4,6 @@ FriendShiper Plugin by BiDuang
 
 from os import close
 import os.path
-import json
 import datetime
 import constants
 import tools
@@ -21,12 +20,12 @@ def startup():
     data_folder = xlz.get_data_folder() + 'friendshiper\\'
     if not os.path.exists(data_folder):
         os.makedirs(data_folder)
-    filename = data_folder+'event_data.json'
+    filename = data_folder+'event_data.txt'
 
     data = {
         'name': 'FriendShiper',  # 插件名称,str,必需
         'author': 'BiDuang',  # 作者,str,必需
-        'version': 'Beta-23',  # 版本号,str,必需
+        'version': 'Beta-34',  # 版本号,str,必需
         'description': '基于FirendShip群聊的消息处理系统',  # 简介,str,必需
         'func_group': group,  # 群聊消息处理函数
     }
@@ -35,12 +34,12 @@ def startup():
 
 def group(data: dict):
     global event_dict
-    global f
     data: dict = tools.process_negative_int_obj(data)  # 处理负整数
+
     f = codecs.open(filename, "r", 'utf-8')
+    f.flush()
     event_dict = eval(f.read())
     f.close()
-    usrpr = group_permission_check(data['sender_qq'], data)
 
     if (data['self_qq'] != data['sender_qq']) and (data['self_anon_id'] != data['sender_qq']):  # 过滤自己(包括其他设备)的消息
         if data['msg_type'] != constants.消息类型_讨论组消息:
@@ -50,9 +49,12 @@ def group(data: dict):
 
             elif data['message'].startswith('添加群事件'):
 
+                usrpr = group_permission_check(data['sender_qq'], data)
                 group_event_ctrl(data, 1, data['message'], usrpr)
 
             elif data['message'].startswith('删除群事件'):
+
+                usrpr = group_permission_check(data['sender_qq'], data)
                 group_event_ctrl(data, 2, data['message'], usrpr)
 
     return False
@@ -87,6 +89,7 @@ def group_event_ctrl(data: dict, mode: int, message: str, perm: bool):
                 data['self_qq'], data['from_group'], msg, False)
             event_dict[etitle] = edate
             f = codecs.open(filename, "w", "utf-8")
+            f.flush()
             f.write(str(event_dict))
             f.close()
     elif mode == 2:
@@ -99,18 +102,19 @@ def group_event_ctrl(data: dict, mode: int, message: str, perm: bool):
         else:
             lines = message[5:].split(" ")
             etitle = lines[1].strip()
-            xlz.log(etitle, '#000000', '#ffffff')
             try:
                 event_dict.pop(etitle)
-            except IndexError:
+            except KeyError:
                 xlz.send_group_msg(
                     data['self_qq'], data['from_group'], '你指定的事件不存在！', False)
                 return
 
+            xlz.log(str(event_dict), '#000000', '#ffffff')
             msg = '你已经成功删除'+etitle+'！'
             xlz.send_group_msg(
                 data['self_qq'], data['from_group'], msg, False)
-            f = codecs.open(filename, "w", "utf-8")
+            f = codecs.open(filename, "w+", "utf-8")
+            f.flush()
             f.write(str(event_dict))
             f.close()
 
