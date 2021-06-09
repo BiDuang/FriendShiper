@@ -89,8 +89,8 @@ def group_event_ctrl(data: dict, mode: int, message: str, perm: bool):
                 data['self_qq'], data['from_group'], msg, False)
             event_dict[etitle] = edate
             f = codecs.open(filename, "w", "utf-8")
-            f.flush()
             f.write(str(event_dict))
+            f.flush()
             f.close()
     elif mode == 2:
         if data['message'].strip() == '删除群事件':
@@ -113,9 +113,9 @@ def group_event_ctrl(data: dict, mode: int, message: str, perm: bool):
             msg = '你已经成功删除'+etitle+'！'
             xlz.send_group_msg(
                 data['self_qq'], data['from_group'], msg, False)
-            f = codecs.open(filename, "w+", "utf-8")
-            f.flush()
+            f = codecs.open(filename, "w", "utf-8")
             f.write(str(event_dict))
+            f.flush()
             f.close()
 
 
